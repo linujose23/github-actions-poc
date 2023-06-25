@@ -41,6 +41,7 @@ jobs:
     - uses: 'google-github-actions/auth@v1'
       with:
           service_account: 'linu-poc@vital-framing-385011.iam.gserviceaccount.com'
+          credentials: ${{ secrets.GKE_SA_KEY }}
 
 
     # Get the GKE credentials so we can deploy to the cluster
