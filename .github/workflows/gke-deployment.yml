@@ -67,7 +67,7 @@ jobs:
       run: |-
         # docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
 
-        docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$GITHUB_SHA"
+        docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$python-app:$GITHUB_SHA"
     # Set up kustomize
     # - name: Set up Kustomize
     #   run: |-
