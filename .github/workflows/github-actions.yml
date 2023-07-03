@@ -54,9 +54,10 @@ jobs:
     # Build the Docker image
     - name: Build and Push Docker Image
       run: |
-        image_tag="asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/$IMAGE:${{ github.sha }}"
-        docker build -t "$image_tag" .
-        docker push "$image_tag"
+        short_sha="${{ github.sha }}"
+        commit_id="${{ github.sha }}"
+        commit_id=${commit_id:1}
+        image_tag="asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/$IMAGE:${commit_id}"
 
 
     # Set up kustomize
