@@ -11,7 +11,6 @@ on:
       - main
 
 env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_CLUSTER: linu-cluster    # Add your cluster name here.
   GKE_ZONE: asia-south1-a   # Add your cluster zone here.
   DEPLOYMENT_NAME: python-app # Add your deployment name here.
@@ -55,8 +54,7 @@ jobs:
     # Build the Docker image
     - name: Build and Push Docker Image
       run: |
-        short_sha="${{ github.sha }}"
-        image_tag="asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}"
+        image_tag="asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/$IMAGE:${{ github.sha }}"
         docker build -t "$image_tag" .
         docker push "$image_tag"
 
