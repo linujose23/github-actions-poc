@@ -55,14 +55,14 @@ jobs:
       # Build the Docker image
     - name: Build and Push Docker Image
       run: |
-        short_sha="${{ github.sha }}:0:7"
+        short_sha="${{ github.sha }}"
         docker build -t "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$short_sha" .
         docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$short_sha"
 
-    # Push the Docker image to Google Artifact Registry
+      # Push the Docker image to Google Artifact Registry
     - name: Publish
       run: |
-        short_sha="${{ github.sha }}:0:7"
+        short_sha="${{ github.sha }}"
         docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$short_sha"
 
     # Set up kustomize
