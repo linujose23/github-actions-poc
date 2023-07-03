@@ -54,11 +54,11 @@ jobs:
 
     # Build the Docker image
     - name: Build and Push Docker Image
-      run: |
-        short_sha="${{ github.sha }}"
-        image_tag="asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/$IMAGE:${{ github.sha }}"
-        docker build -t "$image_tag" .
-        docker push "$image_tag"
+    run: |
+      short_sha="${{ github.sha }}"
+      image_tag="asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}"
+      docker build -t "$image_tag" .
+      docker push "$image_tag"
 
 
     # # Build the Docker image
