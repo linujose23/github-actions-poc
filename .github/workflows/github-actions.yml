@@ -56,8 +56,10 @@ jobs:
       run: |
         short_sha="${{ github.sha }}"
         commit_id="${{ github.sha }}"
-        commit_id=${commit_id:1}
+        commit_id="${commit_id:1}"
         image_tag="asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/$IMAGE:${commit_id}"
+        docker build -t "${image_tag//[$'\t\r\n ']}" .
+        docker push "${image_tag//[$'\t\r\n ']}"
 
 
     # Set up kustomize
