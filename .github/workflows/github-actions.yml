@@ -52,18 +52,20 @@ jobs:
         project_id: ${{ secrets.GKE_PROJECT }}
         location: ${{ env.GKE_ZONE }}
 
-      # Build the Docker image
+    # Build the Docker image
     - name: Build and Push Docker Image
       run: |
         short_sha="${{ github.sha }}"
-        docker build -t "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$short_sha" .
-        docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$short_sha"
+        image_tag="asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$short_sha"
+        docker build -t "$image_tag" .
+        docker push "$image_tag"
 
-      # Push the Docker image to Google Artifact Registry
+    # Push the Docker image to Google Artifact Registry
     - name: Publish
       run: |
         short_sha="${{ github.sha }}"
-        docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$short_sha"
+        image_tag="asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$short_sha"
+        docker push "$image_tag"
 
     # Set up kustomize
     # - name: Set up Kustomize
