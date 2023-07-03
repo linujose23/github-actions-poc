@@ -52,30 +52,22 @@ jobs:
         project_id: ${{ secrets.GKE_PROJECT }}
         location: ${{ env.GKE_ZONE }}
 
-      # Build the Docker image
-    - name: Build and Push Docker Image
-      run: |
-        short_sha="${{ github.sha }}"
-        image_tag="asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}"
-        docker build -t "$image_tag" .
-        docker push "$image_tag"
-    # # Build the Docker image
-    # - name: Build
-    #   run: |-
-    #     short_sha="${{ github.sha }}"
-    #     docker build \
-    #     --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$GITHUB_SHA" \
-    #     --build-arg GITHUB_SHA="$GITHUB_SHA" \
-    #     --build-arg GITHUB_REF="$GITHUB_REF" \
-    #     .
+    # Build the Docker image
+    - name: Build
+      run: |-
+        docker build \
+        --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$GITHUB_SHA" \
+        --build-arg GITHUB_SHA="$GITHUB_SHA" \
+        --build-arg GITHUB_REF="$GITHUB_REF" \
+        .
 
 
-    # # Push the Docker image to Google Container Registry
-    # - name: Publish
-    #   run: |-
-    #     # docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
+    # Push the Docker image to Google Container Registry
+    - name: Publish
+      run: |-
+        # docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
 
-    #     docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$GITHUB_SHA"
+        docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$GITHUB_SHA"
     # Set up kustomize
     # - name: Set up Kustomize
     #   run: |-
