@@ -52,12 +52,6 @@ jobs:
           docker build \
             --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
-            .
-
-      # Authenticate with Google Cloud Registry
-      - name: Authenticate with GCR
-        run: |-
-          echo ${{ secrets.GCR_TOKEN }} | docker login asia-south1-docker.pkg.dev -u _json_key --password-stdin
 
       # Push the Docker image to Google Cloud Registry
       - name: Publish
