@@ -64,13 +64,13 @@ jobs:
         id: check_pr_merge
         run: |
           if [ "${{ github.event.pull_request.merged }}" == "true" ] && [ "${{ github.event.pull_request.base.ref }}" == "master" ]; then
-            echo "${{ github.event.pull_request.merged }} : ${{ github.event.pull_request.base.ref }}"
             echo "PR merged to master branch. Proceeding with deployment."
-            exit 1
+            echo "::set-output name=return-code::1"
           else
             echo "PR not merged to master branch. Skipping deployment."
-            exit 0
+            echo "::set-output name=return-code::0"
           fi
+
 
       # Deploy the Docker image to the GKE cluster if the PR is merged to the master branch
       - name: Deploy
