@@ -1,9 +1,9 @@
 name: Build and Deploy to GKE
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types:
+      - closed
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
@@ -60,22 +60,20 @@ jobs:
         run: |-
           docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$GITHUB_SHA"
 
-      # Check for the release tag
-      - name: Check Release Tag
-        id: check_tag
+      # Check if the pull request is merged and has the releasev1 tag
+      - name: Check PR and Tag
+        id: check_pr_tag
         run: |
-          TAG_FOUND=$(echo "${{ github.ref }}" | grep -o 'refs/tags/releasev1')
-          if [ -z "$TAG_FOUND" ]; then
-            echo "Tag not found. Skipping deployment."
-            exit 0
-          else
-            echo "Tag found. Proceeding with deployment."
+          if [ "${{ github.event.pull_request.merged }}" == "true" ] && [ "${{ github.event.pull_request.head.ref }}" == "releasev1" ]; then
+            echo "PR merged with releasev1 tag. Proceeding with deployment."
             exit 1
+          else
+            echo "PR not merged or tag not found. Skipping deployment."
+            exit 0
           fi
 
-      # Deploy the Docker image to the GKE cluster if the release tag is found
+      # Deploy the Docker image to the GKE cluster if the PR is merged and has the releasev1 tag
       - name: Deploy
-        if: steps.check_tag.outputs.return-code == '1'
+        if: steps.check_pr_tag.outputs.return-code == '1'
         run: |
-          sed -i -e 's/GITHUB_SHA/'"$GITHUB_SHA"'/' ${{ github.workspace }}/.github/manifests/deployment.yaml
-          kubectl apply -f ${{ github.workspace }}/.github/manifests/deployment.yaml
+          sed -i -e 's/GITHUB_SHA/'"$GITHUB_SHA"'/' ${{ github.workspace }}/.github/manifest
