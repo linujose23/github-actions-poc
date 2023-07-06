@@ -50,15 +50,14 @@ jobs:
       - name: Build
         run: |-
           docker build \
-            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$GITHUB_SHA" \
-            --build-arg GITHUB_SHA="$GITHUB_SHA" \
+            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             .
 
       # Push the Docker image to Google Container Registry
       - name: Publish
         run: |-
-          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$GITHUB_SHA"
+          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1"
 
       # Check if the pull request is merged and has the releasev1 tag
       - name: Check PR and Tag
@@ -76,4 +75,5 @@ jobs:
       - name: Deploy
         if: steps.check_pr_tag.outputs.return-code == '1'
         run: |
-          sed -i -e 's/GITHUB_SHA/'"$GITHUB_SHA"'/' ${{ github.workspace }}/.github/manifest
+          sed -i -e 's/GITHUB_SHA/releasev1/' ${{ github.workspace }}/.github/manifests/deployment.yaml
+          kubectl apply -f ${{ github.workspace }}/.github/manifests/deployment.yaml
