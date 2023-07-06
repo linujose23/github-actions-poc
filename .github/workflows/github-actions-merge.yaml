@@ -54,11 +54,6 @@ jobs:
             --build-arg GITHUB_REF="$GITHUB_REF" \
             .
 
-      # Authenticate with Google Cloud Registry
-      - name: Authenticate with GCR
-        run: |-
-          echo ${{ secrets.GCR_TOKEN }} | docker login asia-south1-docker.pkg.dev -u _json_key --password-stdin
-
       # Push the Docker image to Google Cloud Registry
       - name: Publish
         run: |-
