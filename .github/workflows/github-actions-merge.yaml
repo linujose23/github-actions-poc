@@ -64,6 +64,7 @@ jobs:
         id: check_pr_merge
         run: |
           if [ "${{ github.event.pull_request.merged }}" == "true" ] && [ "${{ github.event.pull_request.base.ref }}" == "master" ]; then
+            echo "${{ github.event.pull_request.merged }} : ${{ github.event.pull_request.base.ref }}"
             echo "PR merged to master branch. Proceeding with deployment."
             exit 1
           else
