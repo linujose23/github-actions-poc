@@ -77,4 +77,4 @@ jobs:
         if: steps.check_pr_merge.outputs.return-code == '1'
         run: |
           sed -i -e 's/GITHUB_SHA/releasev1/' ${{ github.workspace }}/.github/manifests/deployment.yaml
-          kubectl apply -f ${{ github.workspace }}/.github/manifests/deployment.yaml || (echo "Deployment failed" && exit 1)
+          kubectl apply --force -f ${{ github.workspace }}/.github/manifests/deployment.yaml || (echo "Deployment failed" && exit 1)
