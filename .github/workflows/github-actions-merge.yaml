@@ -61,17 +61,17 @@ jobs:
           DOCKER_TAG=$(git rev-parse --short HEAD)
           docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$DOCKER_TAG"
 
-      # Check if the pull request is merged and has the release tag
+      # Check if the pull request is merged to the master branch and has the release tag
       - name: Check PR Merge and Tag
         id: check_pr_merge_tag
-        if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-')
+        if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-') && github.ref == 'refs/heads/master'
         run: |
           echo "PR merged to master branch with the release tag. Proceeding with deployment."
           echo "::set-output name=deploy::true"
           echo "::set-output name=tag::${{ github.event.pull_request.head.ref }}"
           echo "Release tag: ${{ github.event.pull_request.head.ref }}"
 
-      # Deploy the Docker image to the GKE cluster if the PR is merged and has the release tag
+      # Deploy the Docker image to the GKE cluster if the PR is merged to the master branch and has the release tag
       - name: Deploy
         if: steps.check_pr_merge_tag.outputs.deploy == 'true'
         run: |
