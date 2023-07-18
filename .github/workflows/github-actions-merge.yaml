@@ -49,11 +49,11 @@ jobs:
           project_id: ${{ secrets.GKE_PROJECT }}
           location: ${{ env.GKE_ZONE }}
 
-      # Check if the pull request is merged to the main branch
+      # Check if the pull request is merged into the main branch
       - name: Check PR Merge
         id: check_pr_merge
         run: |
-          if [[ "${{ github.event.pull_request.merged }}" == "true" && "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
+          if [[ "${{ github.event.pull_request.merged }}" == "true" && "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "PR merged to main branch. Proceeding with deployment."
             echo "::set-output name=merge-branch::true"
           else
