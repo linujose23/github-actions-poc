@@ -53,26 +53,21 @@ jobs:
       - name: Check PR Merge
         id: check_pr_merge
         run: |
-          if [ "${{ github.event.pull_request.merged }}" == "true" ] && [ "${{ github.event.pull_request.base.ref }}" == "master" ]; then
-            echo "PR merged to master branch. Proceeding with deployment."
-            echo "::set-output name=return-code::1"
+          if [[ "${{ github.event.pull_request.merged }}" == "true" && "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
+            echo "PR merged to main branch. Proceeding with deployment."
+            echo "::set-output name=merge-branch::true"
           else
-            echo "PR not merged to master branch. Skipping deployment."
-            echo "::set-output name=return-code::0"
+            echo "PR not merged to main branch. Skipping deployment."
+            echo "::set-output name=merge-branch::false"
           fi
 
       # Check if the tag is a release tag
       - name: Check Release Tag
         id: check_release_tag
-        if: steps.check_pr_merge.outputs.merge-branch == 'true'
+        if: steps.check_pr_merge.outputs.merge-branch == 'true' && startsWith(github.ref, 'refs/tags/release-')
         run: |
-          if [[ "${{ github.ref }}" =~ ^refs/tags/release-.*$ ]]; then
-            echo "Release tag detected. Proceeding with deployment."
-            echo "::set-output name=release-tag::true"
-          else
-            echo "Not a release tag. Skipping deployment."
-            echo "::set-output name=release-tag::false"
-          fi
+          echo "Release tag detected. Proceeding with deployment."
+          echo "::set-output name=release-tag::true"
 
       # Build the Docker image
       - name: Build
