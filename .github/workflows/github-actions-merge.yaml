@@ -74,17 +74,17 @@ jobs:
             echo "::set-output name=release-tag::false"
           fi
 
-      # Check if the pull request is merged to the master branch
-      - name: Check PR Merge
-        id: check_pr_merge
-        if: contains(github.event.pull_request.labels.*.name, 'release')
+      # Check if the pull request is merged to the master branch and contains the label "release"
+      - name: Check PR Merge and Label
+        id: check_pr_merge_label
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master' && contains(github.event.pull_request.labels.*.name, 'release') }}
         run: |
-          echo "PR merged to master branch."
-          echo "::set-output name=pr-merged::true"
+          echo "PR merged to master branch and contains the label 'release'."
+          echo "::set-output name=pr-merged-label::true"
 
-      # Deploy the Docker image to the GKE cluster if both conditions are met
+      # Deploy the Docker image to the GKE cluster if all conditions are met
       - name: Deploy
-        if: steps.check_release_tag.outputs.release-tag == 'true' && steps.check_pr_merge.outputs.pr-merged == 'true'
+        if: steps.check_release_tag.outputs.release-tag == 'true' && steps.check_pr_merge_label.outputs.pr-merged-label == 'true'
         run: |
           sed -i -e "s~IMAGE_TAG~${{ github.ref }}~" ${{ github.workspace }}/.github/manifests/deployment.yaml
           sed -i -e "s~DEPLOYMENT_NAME~${{ env.DEPLOYMENT_NAME }}~" ${{ github.workspace }}/.github/manifests/deployment.yaml
