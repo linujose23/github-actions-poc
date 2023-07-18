@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - 'release-*'
+  pull_request:
+    types:
+      - closed
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
@@ -63,17 +66,25 @@ jobs:
       - name: Check Release Tag
         id: check_release_tag
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/tags/release-*" ]]; then
-            echo "Release tag detected. Proceeding with deployment."
-            echo "::set-output name=return-code::1"
+          if [[ "${{ github.event_name }}" == "push" && "${{ startsWith(github.ref, 'refs/tags/release-') }}" == "true" ]]; then
+            echo "Release tag detected."
+            echo "::set-output name=release-tag::true"
           else
-            echo "Not a release tag. Skipping deployment."
-            echo "::set-output name=return-code::0"
+            echo "Not a release tag."
+            echo "::set-output name=release-tag::false"
           fi
 
-      # Deploy the Docker image to the GKE cluster if it's a release tag
+      # Check if the pull request is merged to the master branch
+      - name: Check PR Merge
+        id: check_pr_merge
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.base.ref, 'master') }}
+        run: |
+          echo "PR merged to master branch."
+          echo "::set-output name=pr-merged::true"
+
+      # Deploy the Docker image to the GKE cluster if both conditions are met
       - name: Deploy
-        if: steps.check_release_tag.outputs.return-code == '1'
+        if: steps.check_release_tag.outputs.release-tag == 'true' && steps.check_pr_merge.outputs.pr-merged == 'true'
         run: |
           sed -i -e "s/GITHUB_SHA/${{ github.ref }}/" ${{ github.workspace }}/.github/manifests/deployment.yaml
           kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
