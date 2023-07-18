@@ -86,5 +86,7 @@ jobs:
       - name: Deploy
         if: steps.check_release_tag.outputs.release-tag == 'true' && steps.check_pr_merge.outputs.pr-merged == 'true'
         run: |
-          sed -i -e "s/GITHUB_SHA/${{ github.ref }}/" ${{ github.workspace }}/.github/manifests/deployment.yaml
+          sed -i -e "s/GITHUB_REF/${{ github.ref }}/" ${{ github.workspace }}/.github/manifests/deployment.yaml
+          sed -i -e "s/DEPLOYMENT_NAME/${{ env.DEPLOYMENT_NAME }}/" ${{ github.workspace }}/.github/manifests/deployment.yaml
+          kubectl apply -f ${{ github.workspace }}/.github/manifests/deployment.yaml --record
           kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
