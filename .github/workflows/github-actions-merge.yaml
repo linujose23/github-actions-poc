@@ -22,22 +22,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Get Short SHA
-        id: get_short_sha
-        run: echo "::set-output name=short_sha::${{ github.sha }}"
-
-      - name: Merge PR
-        if: startsWith(github.event.pull_request.head.ref, 'refs/pull/') && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-')
-        run: |
-          git fetch origin ${GITHUB_REF}
-          git checkout FETCH_HEAD -B merge-branch
-          git checkout master
-          git merge --no-ff merge-branch -m "Merge pull request #${{ github.event.pull_request.number }}"
-          git push origin master
-          git branch -D merge-branch
-
-      - name: Deploy to GKE
-        if: startsWith(github.event.pull_request.head.ref, 'refs/pull/') && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-')
+      - name: Merge PR and Deploy to GKE
+        if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-')
         uses: google-github-actions/setup-gcloud@v0.5.0
         with:
           service_account_key: ${{ secrets.GKE_SA_KEY }}
@@ -46,10 +32,10 @@ jobs:
       - run: |-
           gcloud --quiet auth configure-docker asia-south1-docker.pkg.dev
           docker build \
-            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ steps.get_short_sha.outputs.short_sha }}" \
+            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:latest" \
             --build-arg GITHUB_REF="${GITHUB_REF}" \
             .
-          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ steps.get_short_sha.outputs.short_sha }}"
+          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:latest"
 
       - uses: 'google-github-actions/auth@v1'
         with:
@@ -65,7 +51,5 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          sed -i -e "s~IMAGE_TAG~${{ steps.get_short_sha.outputs.short_sha }}~" ${{ github.workspace }}/.github/manifests/deployment.yaml
-          sed -i -e "s~DEPLOYMENT_NAME~${{ env.DEPLOYMENT_NAME }}~" ${{ github.workspace }}/.github/manifests/deployment.yaml
-          kubectl apply -f ${{ github.workspace }}/.github/manifests/deployment.yaml --record
+          sed -i -e 's/GITHUB_REF/latest/' ${{ github.workspace }}/.github/manifests/deployment.yaml
           kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
