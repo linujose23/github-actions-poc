@@ -49,24 +49,24 @@ jobs:
           project_id: ${{ secrets.GKE_PROJECT }}
           location: ${{ env.GKE_ZONE }}
 
-      # Check if the pull request is merged to the master branch
+      # Check if the pull request is merged to the main branch
       - name: Check PR Merge
         id: check_pr_merge
         run: |
-          if [ "${{ github.event.pull_request.merged }}" == "true" ] && [ "${{ github.event.pull_request.base.ref }}" == "master" ]; then
-            echo "PR merged to master branch. Proceeding with deployment."
-            echo "::set-output name=release-tag::true"
+          if [[ "${{ github.event.pull_request.base.ref }}" == "main" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            echo "PR merged to main branch. Proceeding with deployment."
+            echo "::set-output name=merge-branch::true"
           else
-            echo "PR not merged to master branch. Skipping deployment."
-            echo "::set-output name=release-tag::false"
+            echo "PR not merged to main branch. Skipping deployment."
+            echo "::set-output name=merge-branch::false"
           fi
 
       # Check if the tag is a release tag
       - name: Check Release Tag
         id: check_release_tag
-        if: steps.check_pr_merge.outputs.release-tag == 'true'
+        if: steps.check_pr_merge.outputs.merge-branch == 'true'
         run: |
-          if [[ "${{ github.ref }}" == "refs/tags/release-*" ]]; then
+          if [[ "${{ github.ref }}" =~ ^refs/tags/release-.*$ ]]; then
             echo "Release tag detected. Proceeding with deployment."
             echo "::set-output name=release-tag::true"
           else
@@ -79,7 +79,7 @@ jobs:
         if: steps.check_release_tag.outputs.release-tag == 'true'
         run: |-
           docker build \
-            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.ref }}" \
+            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             .
 
@@ -87,11 +87,11 @@ jobs:
       - name: Publish
         if: steps.check_release_tag.outputs.release-tag == 'true'
         run: |-
-          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.ref }}"
+          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}"
 
-      # Deploy the Docker image to the GKE cluster if it's a release tag
+      # Deploy the Docker image to the GKE cluster
       - name: Deploy
         if: steps.check_release_tag.outputs.release-tag == 'true'
         run: |
-          sed -i -e 's/GITHUB_SHA/releasev1/' ${{ github.workspace }}/.github/manifests/deployment.yaml
-          kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
+          sed -i -e 's/GITHUB_SHA/'"${{ github.sha }}"'/' ${{ github.workspace }}/.github/manifests/deployment.yaml
+          kubectl apply -f ${{ github.workspace }}/.github/manifests/deployment.yaml
