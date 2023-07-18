@@ -4,9 +4,6 @@ on:
   pull_request:
     types:
       - closed
-  push:
-    tags:
-      - 'release-*' # Match any tags starting with "release-"
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
@@ -49,44 +46,36 @@ jobs:
           project_id: ${{ secrets.GKE_PROJECT }}
           location: ${{ env.GKE_ZONE }}
 
-      # Check if the pull request is merged into the main branch
-      - name: Check PR Merge
-        id: check_pr_merge
-        run: |
-          if [[ "${{ github.event.pull_request.merged }}" == "true" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "PR merged to main branch. Proceeding with deployment."
-            echo "::set-output name=merge-branch::true"
-          else
-            echo "PR not merged to main branch. Skipping deployment."
-            echo "::set-output name=merge-branch::false"
-          fi
-
-      # Check if the tag is a release tag
-      - name: Check Release Tag
-        id: check_release_tag
-        if: steps.check_pr_merge.outputs.merge-branch == 'true' && startsWith(github.ref, 'refs/tags/release-')
-        run: |
-          echo "Release tag detected. Proceeding with deployment."
-          echo "::set-output name=release-tag::true"
-
       # Build the Docker image
       - name: Build
-        if: steps.check_release_tag.outputs.release-tag == 'true'
         run: |-
           docker build \
-            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}" \
+            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             .
 
       # Push the Docker image to Google Cloud Registry
       - name: Publish
-        if: steps.check_release_tag.outputs.release-tag == 'true'
         run: |-
-          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}"
+          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1"
 
-      # Deploy the Docker image to the GKE cluster
-      - name: Deploy
-        if: steps.check_release_tag.outputs.release-tag == 'true'
+      # Check if the pull request is merged to the master branch
+      - name: Check PR Merge
+        id: check_pr_merge
         run: |
-          sed -i -e 's/GITHUB_SHA/'"${{ github.sha }}"'/' ${{ github.workspace }}/.github/manifests/deployment.yaml
-          kubectl apply -f ${{ github.workspace }}/.github/manifests/deployment.yaml
+          if [ "${{ github.event.pull_request.merged }}" == "true" ] && [ "${{ github.event.pull_request.base.ref }}" == "master" ]; then
+            echo "PR merged to master branch. Proceeding with deployment."
+            echo "::set-output name=return-code::1"
+          else
+            echo "PR not merged to master branch. Skipping deployment."
+            echo "::set-output name=return-code::0"
+          fi
+
+
+      # Deploy the Docker image to the GKE cluster if the PR is merged to the master branch
+      - name: Deploy
+        if: steps.check_pr_merge.outputs.return-code == '1'
+        run: |
+          sed -i -e 's/GITHUB_SHA/releasev1/' ${{ github.workspace }}/.github/manifests/deployment.yaml
+          kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
+          # kubectl apply --force -f ${{ github.workspace }}/.github/manifests/deployment.yaml || (echo "Deployment failed" && exit 1)
