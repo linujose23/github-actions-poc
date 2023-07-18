@@ -62,14 +62,12 @@ jobs:
       # Check if the pull request is merged and has the release tag
       - name: Check PR Merge and Tag
         id: check_pr_merge_tag
-        if: >
-          steps.check_pr_merge.outputs.return-code == '1' &&
-          contains(github.event.pull_request.head.ref, 'refs/tags/release-')
-
+        if: steps.check_pr_merge.outputs.return-code == '1' && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-')
         run: |
           echo "PR merged to master branch with the release tag. Proceeding with deployment."
           echo "::set-output name=deploy::true"
           echo "::set-output name=tag::${{ github.event.pull_request.head.ref }}"
+          echo "Release tag: ${{ github.event.pull_request.head.ref }}"
 
       # Deploy the Docker image to the GKE cluster if the PR is merged and has the release tag
       - name: Deploy
