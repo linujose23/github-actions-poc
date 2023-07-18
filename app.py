@@ -2,6 +2,6 @@ from flask import Flask
 app = Flask('hello-world')
 @app.route('/')
 def hello():
- return "This iss a functionss returning this from github actions merged from PR branch bla bla!!!\n"
+ return "This issa a functionss returning this from github actions merged from PR branch bla bla!!!\n"
 if __name__ == '__main__':
  app.run(host = '0.0.0.0', port = 8080)
