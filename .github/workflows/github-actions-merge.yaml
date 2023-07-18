@@ -4,6 +4,9 @@ on:
   pull_request:
     types:
       - closed
+  push:
+    tags:
+      - 'release-*' # Match any tags starting with "release-"
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
@@ -58,9 +61,22 @@ jobs:
             echo "::set-output name=merge-branch::false"
           fi
 
+      # Check if the tag is a release tag
+      - name: Check Release Tag
+        id: check_release_tag
+        if: steps.check_pr_merge.outputs.merge-branch == 'true'
+        run: |
+          if [[ "${{ github.ref }}" =~ ^refs/tags/release-.*$ ]]; then
+            echo "Release tag detected. Proceeding with deployment."
+            echo "::set-output name=release-tag::true"
+          else
+            echo "Not a release tag. Skipping deployment."
+            echo "::set-output name=release-tag::false"
+          fi
+
       # Build the Docker image
       - name: Build
-        if: steps.check_pr_merge.outputs.merge-branch == 'true'
+        if: steps.check_release_tag.outputs.release-tag == 'true'
         run: |-
           docker build \
             --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}" \
@@ -69,13 +85,13 @@ jobs:
 
       # Push the Docker image to Google Cloud Registry
       - name: Publish
-        if: steps.check_pr_merge.outputs.merge-branch == 'true'
+        if: steps.check_release_tag.outputs.release-tag == 'true'
         run: |-
           docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}"
 
       # Deploy the Docker image to the GKE cluster
       - name: Deploy
-        if: steps.check_pr_merge.outputs.merge-branch == 'true'
+        if: steps.check_release_tag.outputs.release-tag == 'true'
         run: |
           sed -i -e 's/GITHUB_SHA/'"${{ github.sha }}"'/' ${{ github.workspace }}/.github/manifests/deployment.yaml
           kubectl apply -f ${{ github.workspace }}/.github/manifests/deployment.yaml
