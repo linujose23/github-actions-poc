@@ -1,9 +1,9 @@
 name: Build and Deploy to GKE
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
+    tags:
+      - 'release-*'
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
@@ -50,32 +50,30 @@ jobs:
       - name: Build
         run: |-
           docker build \
-            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1" \
-            --build-arg GITHUB_REF="$GITHUB_REF" \
+            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.ref }}" \
+            --build-arg GITHUB_REF="${{ github.ref }}" \
             .
 
       # Push the Docker image to Google Cloud Registry
       - name: Publish
         run: |-
-          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1"
+          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.ref }}"
 
-      # Check if the pull request is merged to the master branch
-      - name: Check PR Merge
-        id: check_pr_merge
+      # Check if the push event is a release tag
+      - name: Check Release Tag
+        id: check_release_tag
         run: |
-          if [ "${{ github.event.pull_request.merged }}" == "true" ] && [ "${{ github.event.pull_request.base.ref }}" == "master" ]; then
-            echo "PR merged to master branch. Proceeding with deployment."
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/tags/release-*" ]]; then
+            echo "Release tag detected. Proceeding with deployment."
             echo "::set-output name=return-code::1"
           else
-            echo "PR not merged to master branch. Skipping deployment."
+            echo "Not a release tag. Skipping deployment."
             echo "::set-output name=return-code::0"
           fi
 
-
-      # Deploy the Docker image to the GKE cluster if the PR is merged to the master branch
+      # Deploy the Docker image to the GKE cluster if it's a release tag
       - name: Deploy
-        if: steps.check_pr_merge.outputs.return-code == '1'
+        if: steps.check_release_tag.outputs.return-code == '1'
         run: |
-          sed -i -e 's/GITHUB_SHA/releasev1/' ${{ github.workspace }}/.github/manifests/deployment.yaml
+          sed -i -e "s/GITHUB_SHA/${{ github.ref }}/" ${{ github.workspace }}/.github/manifests/deployment.yaml
           kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
-          # kubectl apply --force -f ${{ github.workspace }}/.github/manifests/deployment.yaml || (echo "Deployment failed" && exit 1)
