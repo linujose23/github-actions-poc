@@ -53,12 +53,12 @@ jobs:
       - name: Check PR Merge
         id: check_pr_merge
         run: |
-          if [[ "${{ github.event.pull_request.base.ref }}" == "main" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
-            echo "PR merged to main branch. Proceeding with deployment."
-            echo "::set-output name=merge-branch::true"
+          if [ "${{ github.event.pull_request.merged }}" == "true" ] && [ "${{ github.event.pull_request.base.ref }}" == "master" ]; then
+            echo "PR merged to master branch. Proceeding with deployment."
+            echo "::set-output name=return-code::1"
           else
-            echo "PR not merged to main branch. Skipping deployment."
-            echo "::set-output name=merge-branch::false"
+            echo "PR not merged to master branch. Skipping deployment."
+            echo "::set-output name=return-code::0"
           fi
 
       # Check if the tag is a release tag
