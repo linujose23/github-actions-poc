@@ -49,20 +49,22 @@ jobs:
       # Build the Docker image
       - name: Build
         run: |-
+          DOCKER_TAG=$(git rev-parse --short HEAD)
           docker build \
-            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1" \
+            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$DOCKER_TAG" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             .
 
       # Push the Docker image to Google Cloud Registry
       - name: Publish
         run: |-
-          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:releasev1"
+          DOCKER_TAG=$(git rev-parse --short HEAD)
+          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:$DOCKER_TAG"
 
       # Check if the pull request is merged and has the release tag
       - name: Check PR Merge and Tag
         id: check_pr_merge_tag
-        if: steps.check_pr_merge.outputs.return-code == '1' && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-')
+        if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-')
         run: |
           echo "PR merged to master branch with the release tag. Proceeding with deployment."
           echo "::set-output name=deploy::true"
@@ -73,6 +75,7 @@ jobs:
       - name: Deploy
         if: steps.check_pr_merge_tag.outputs.deploy == 'true'
         run: |
-          sed -i -e 's/GITHUB_SHA/releasev1/' ${{ github.workspace }}/.github/manifests/deployment.yaml
+          DOCKER_TAG=$(git rev-parse --short HEAD)
+          sed -i -e "s/GITHUB_SHA/$DOCKER_TAG/" ${{ github.workspace }}/.github/manifests/deployment.yaml
           kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
           # kubectl apply --force -f ${{ github.workspace }}/.github/manifests/deployment.yaml || (echo "Deployment failed" && exit 1)
