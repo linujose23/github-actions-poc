@@ -24,7 +24,12 @@ jobs:
           else
             echo "PR not merged with a release tag. Skipping deployment and image push."
             echo "should-deploy=false" >> $GITHUB_ENV
+
+            echo "result ${{ steps.pr-check.outputs.shouldDeploy }}"
           fi
+
+      - name: Print shouldDeploy value
+        run: echo "shouldDeploy=${{ steps.pr-check.outputs.shouldDeploy }}"
 
       - name: Checkout code
         uses: actions/checkout@v2
