@@ -54,7 +54,7 @@ jobs:
           docker push "asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/python-app:${{ github.sha }}"
 
       - name: Authenticate to GKE
-        run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --region ${{ env.GKE_ZONE }}
+        run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --location ${{ env.GKE_ZONE }}
 
       - name: Apply manifest file and rollout restart
         if: env.should-deploy == 'true'
