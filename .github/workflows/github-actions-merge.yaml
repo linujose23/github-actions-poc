@@ -55,7 +55,7 @@ jobs:
 
       - name: Authenticate to GKE
       # gcloud container clusters get-credentials linu-cluster --zone asia-south1-a --project vital-framing-385011
-        run: gcloud container clusters get-credentials --zone ${{ env.GKE_ZONE }} --project ${{ secrets.GKE_PROJECT }}
+        run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone ${{ env.GKE_ZONE }} --project ${{ secrets.GKE_PROJECT }}
 
       - name: Apply manifest file and rollout restart
         if: env.should-deploy == 'true'
