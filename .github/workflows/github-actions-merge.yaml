@@ -64,7 +64,7 @@ jobs:
       # Check if the pull request is merged to the master branch and has the release tag
       - name: Check PR Merge and Tag
         id: check_pr_merge_tag
-        if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-') && github.ref == 'refs/heads/master'
+        if: ${{ github.event.pull_request.merged == 'true' && github.event.pull_request.base.ref == 'refs/heads/master' && startsWith(github.event.pull_request.head.ref, 'refs/tags/release-') }}
         run: |
           echo "PR merged to master branch with the release tag. Proceeding with deployment."
           echo "::set-output name=deploy::true"
