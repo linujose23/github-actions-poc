@@ -18,6 +18,9 @@ jobs:
           pr_merged=$(echo "$pr_response" | jq -r .merged)
           pr_tag=$(echo "$pr_response" | jq -r .head.ref)
 
+          echo "pr_merged=${pr_merged}"
+          echo "pr_tag=${pr_tag}"
+
           if [[ "$pr_merged" == "true" && "$pr_tag" =~ ^release- ]]; then
             echo "PR merged with a release tag"
             echo "shouldDeploy=true" >> $GITHUB_ENV
@@ -28,6 +31,8 @@ jobs:
 
       - name: Print shouldDeploy value
         run: echo "shouldDeploy=${{ env.shouldDeploy }}"
+
+
 
       - name: Checkout code
         uses: actions/checkout@v2
