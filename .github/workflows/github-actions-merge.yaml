@@ -61,4 +61,4 @@ jobs:
         if: env.should-deploy == 'true'
         run: |
           kubectl apply -f .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
-          kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.GKE_NAMESPACE }}
+          kubectl rollout restart .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
