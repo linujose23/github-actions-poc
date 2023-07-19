@@ -65,4 +65,4 @@ jobs:
         if: ${{ steps.pr-check.outputs.shouldDeploy == 'true' }}
         run: |
           kubectl apply -f .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
-          kubectl rollout restart deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
+          kubectl rollout restart deploy .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
