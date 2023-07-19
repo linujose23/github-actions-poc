@@ -43,7 +43,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}
+          tags: asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Authenticate to GKE
         run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --region ${{ env.GKE_ZONE }}
