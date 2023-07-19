@@ -16,7 +16,7 @@ jobs:
           pr_number="${{ github.event.pull_request.number }}"
           pr_response=$(curl -sSL -H "Authorization: Bearer ${{ secrets.TOKEN_GITHUB }}" "https://api.github.com/repos/${{ github.repository }}/pulls/$pr_number")
           pr_merged=$(echo "$pr_response" | jq -r .merged)
-          pr_tag=$(echo "$pr_response" | jq -r .head.ref)
+          pr_tag=$GITHUB_REF_NAME"
 
           echo "pr_merged=${pr_merged}"
           echo "pr_tag=${pr_tag}"
