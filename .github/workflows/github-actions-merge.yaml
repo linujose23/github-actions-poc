@@ -34,7 +34,7 @@ jobs:
       - name: Configure GCP environment
         uses: google-github-actions/setup-gcloud@v0.4.0
         with:
-          project_id: YOUR_PROJECT_ID
+          project_id: ${{ secrets.GKE_PROJECT }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
@@ -43,24 +43,12 @@ jobs:
         with:
           context: .
           push: true
-          tags: gcr.io/${{ secrets.GKE_PROJECT }}/your-image-name:${{ github.sha }}
+          tags: asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}
 
       - name: Authenticate to GKE
-        run: gcloud container clusters get-credentials YOUR_CLUSTER_NAME --region YOUR_REGION
+        run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --region ${{ env.GKE_ZONE }}
 
-      - name: Check if deployment exists
-        id: check-deployment
+      - name: Apply manifest file and rollout restart
         run: |
-          if kubectl get deployment/your-deployment -n your-namespace &> /dev/null; then
-            echo "::set-output name=exists::true"
-          else
-            echo "::set-output name=exists::false"
-          fi
-
-      - name: Rollout restart or apply deployment
-        run: |
-          if
-            kubectl apply -f .github/deploy/deployment.yaml
-          else [[ "${{ steps.check-deployment.outputs.exists }}" == "true" ]]; then
+          kubectl apply -f .github/deploy/deployment.yaml
           kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
-          fi
