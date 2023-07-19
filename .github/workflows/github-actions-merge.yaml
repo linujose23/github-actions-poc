@@ -41,7 +41,8 @@ jobs:
           context: .
           push: true
           # asia-south1-docker.pkg.dev/vital-framing-385011/linu-poc-repo/python-app:releasev1
-          tags: asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/python-app:${{ github.sha }}
+
+          tags: asia-south1-docker.pkg.dev/vital-framing-385011/linu-poc-repo/python-app:${{ github.sha }}
 
       - name: Authenticate to GKE
         run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --region ${{ env.GKE_ZONE }}
