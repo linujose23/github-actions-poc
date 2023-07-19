@@ -39,14 +39,14 @@ jobs:
       - name: Build
         run: |-
           docker build \
-            --tag "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}" \
+            --tag "asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/python-app:${{ github.sha }}" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             .
 
       # Push the Docker image to Google Cloud Registry
       - name: Publish
         run: |-
-          docker push "asia-south1-docker.pkg.dev/$PROJECT_ID/linu-poc-repo/$IMAGE:${{ github.sha }}"
+          docker push "asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-poc-repo/python-app:${{ github.sha }}"
 
       - name: Authenticate to GKE
         run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --region ${{ env.GKE_ZONE }}
