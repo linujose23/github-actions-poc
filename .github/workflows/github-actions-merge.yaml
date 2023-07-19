@@ -18,18 +18,16 @@ jobs:
           pr_merged=$(echo "$pr_response" | jq -r .merged)
           pr_ref=$(echo "$pr_response" | jq -r .base.ref)
 
-          if [[ "$pr_merged" == "true" && "$pr_ref" == "release/"* ]]; then
+          if [[ "$pr_merged" == "true" && "$pr_ref" =~ ^release/ ]]; then
             echo "PR merged with a release tag"
-            echo "should-deploy=true" >> $GITHUB_ENV
+            echo "shouldDeploy=true" >> $GITHUB_ENV
           else
             echo "PR not merged with a release tag. Skipping deployment and image push."
-            echo "should-deploy=false" >> $GITHUB_ENV
-
-            echo "result ${{ steps.pr-check.outputs.shouldDeploy }}"
+            echo "shouldDeploy=false" >> $GITHUB_ENV
           fi
 
       - name: Print shouldDeploy value
-        run: echo "shouldDeploy=${{ steps.pr-check.outputs.shouldDeploy }}"
+        run: echo "shouldDeploy=${{ env.shouldDeploy }}"
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -42,7 +40,7 @@ jobs:
 
       - name: Install gke-gcloud-auth-plugin
         run: |
-            gcloud components install gke-gcloud-auth-plugin
+          gcloud components install gke-gcloud-auth-plugin
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
@@ -64,10 +62,9 @@ jobs:
 
       - name: Authenticate to GKE
         run: gcloud container clusters get-credentials linu-cluster --zone asia-south1-a --project vital-framing-385011
-        # run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone asia-south1-a --project ${{ secrets.GKE_PROJECT }}
 
       - name: Apply manifest file and rollout restart
-        if: ${{ steps.pr-check.outputs.shouldDeploy == 'true' }}
+        if: ${{ env.shouldDeploy == 'true' }}
         run: |
           kubectl apply -f .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
-          kubectl rollout restart deploy .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
+          kubectl rollout restart deploy /deploy/${{ env.DEPLOYMENT_NAME }} -n ${{ env.GKE_NAMESPACE }}
