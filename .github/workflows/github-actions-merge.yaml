@@ -62,7 +62,7 @@ jobs:
         # run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone asia-south1-a --project ${{ secrets.GKE_PROJECT }}
 
       - name: Apply manifest file and rollout restart
-        if: env.should-deploy == 'true'
+        if: ${{ steps.pr-check.outputs.shouldDeploy == 'true' }}
         run: |
           kubectl apply -f .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
-          kubectl rollout restart .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
+          kubectl rollout restart deploy .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
