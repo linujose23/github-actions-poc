@@ -11,22 +11,20 @@ jobs:
 
     steps:
       - name: Check for merged PR
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.TOKEN_GITHUB }}
-          script: |
-            const pr = await github.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number
-            });
-            if (pr.data.merged && pr.data.base.ref.startsWith('release/')) {
-              console.log('PR merged with a release tag');
-              return true;
-            } else {
-              console.log('PR not merged with a release tag. Skipping deployment and image push.');
-              return false;
-            }
+        id: pr-check
+        run: |
+          pr_number="${{ github.event.pull_request.number }}"
+          pr_response=$(curl -sSL -H "Authorization: Bearer ${{ secrets.TOKEN_GITHUB }}" "https://api.github.com/repos/${{ github.repository }}/pulls/$pr_number")
+          pr_merged=$(echo "$pr_response" | jq -r .merged)
+          pr_ref=$(echo "$pr_response" | jq -r .base.ref)
+
+          if [[ "$pr_merged" == "true" && "$pr_ref" == "release/"* ]]; then
+            echo "PR merged with a release tag"
+            echo "::set-output name=should-deploy::true"
+          else
+            echo "PR not merged with a release tag. Skipping deployment and image push."
+            echo "::set-output name=should-deploy::false"
+          fi
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -49,6 +47,7 @@ jobs:
         run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --region ${{ env.GKE_ZONE }}
 
       - name: Apply manifest file and rollout restart
+        if: ${{ needs.pr-check.outputs.should-deploy == 'true' }}
         run: |
-          kubectl apply -f .github/deploy/deployment.yaml
-          kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }}
+          kubectl apply -f .github/deploy/deployment.yaml -n ${{ env.GKE_NAMESPACE }}
+          kubectl rollout restart deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.GKE_NAMESPACE }}
