@@ -1,9 +1,21 @@
 name: Build and Deploy to GKE
 
+# on:
+#   pull_request:
+#     types:
+#       - closed
+#     branches :
+#       - master
+
 on:
-  pull_request:
-    types:
-      - closed
+  push:
+    branches :
+      - master
+    tags:
+      - v*
+
+
+
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
