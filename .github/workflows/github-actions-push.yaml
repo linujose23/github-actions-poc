@@ -44,8 +44,8 @@ jobs:
       # Push the Docker image to Google Cloud Registry
       - name: Publish
         run: |-
-          docker push "asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-artifact-repo/python-app:${{ env.SHA_SHORT }}"
-
+          # docker push "asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-artifact-repo/python-app:${{ env.SHA_SHORT }}"
+          docker push "asia-south1-docker.pkg.dev/river-blade-408018/linu-artifact-repo/python-app:${{ env.SHA_SHORT }}"
       - name: Set latest tag as output
         id: set-latest-tag
         run: echo "::set-output name=latest_tag::${{ env.SHA_SHORT }}"
