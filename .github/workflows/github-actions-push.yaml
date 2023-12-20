@@ -13,11 +13,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Configure GCP environment
-        uses: google-github-actions/setup-gcloud@v0.5.0
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0.4.0'
         with:
-          service_account_key: ${{ secrets.GKE_SA_KEY }}
-          project_id: ${{ secrets.GKE_PROJECT }}
+          token_format: 'access_token'
+          project_id: '${{ secrets.GKE_PROJECT }}'
+          workload_identity_provider: 'projects/66221294563/locations/global/workloadIdentityPools/linu-wif/attribute.repository/linujose23/github-actions-poc'
+          service_account: 'cicd-sa@river-blade-408018.iam.gserviceaccount.com'
 
       - name: Install gke-gcloud-auth-plugin
         run: |
