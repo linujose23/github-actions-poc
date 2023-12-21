@@ -54,6 +54,7 @@ jobs:
       # Push the Docker image to Google Cloud Registry
       - name: Publish
         run: |-
+          gcloud --quiet auth configure-docker asia-south1-docker.pkg.dev
           docker push "asia-south1-docker.pkg.dev/${{ secrets.GKE_PROJECT }}/linu-artifact-repo/python-app:${{ env.SHA_SHORT }}"
 
       - name: Set latest tag as output
