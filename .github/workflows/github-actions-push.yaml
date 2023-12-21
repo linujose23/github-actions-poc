@@ -24,7 +24,7 @@ jobs:
         with:
           token_format: 'access_token'
           project_id: '${{ secrets.GKE_PROJECT }}'
-          workload_identity_provider: 'projects/66221294563/locations/global/workloadIdentityPools/linu-wif/providers/github'
+          workload_identity_provider: 'projects/66221294563/locations/global/workloadIdentityPools/wif-demo-pool/providers/github'
           service_account: 'cicd-sa@river-blade-408018.iam.gserviceaccount.com'
 
       - name: Install gke-gcloud-auth-plugin
